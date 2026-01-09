@@ -16,33 +16,62 @@ services:
       - product-db
   
   product-db:
-    image: mysql:latest
+    image: mysql:8.0
     env_file:
       - .env
     environment:
-      MYSQL_ROOT_PASSWORD : ${PRODUCT_DB_PASSWORD}
-      MYSQL_DATABASE : ${PRODUCT_DB_NAME}
+      MYSQL_ROOT_PASSWORD: ${PRODUCT_DB_PASSWORD}
+      MYSQL_DATABASE: ${PRODUCT_DB_NAME}
+      MYSQL_USER: ${PRODUCT_DB_USER}
+      MYSQL_PASSWORD: ${PRODUCT_DB_PASSWORD}
     volumes:
       - product-db-data:/var/lib/mysql
-  
-  # ... service lain ...
+    restart: always
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: pma_ecommerce
     environment:
-      # KOREKSI 1: Gunakan nama service "product-db"
       PMA_HOST: product-db  
       PMA_USER: root
-      # KOREKSI 2: Gunakan variabel env agar sinkron dengan DB
       PMA_PASSWORD: ${PRODUCT_DB_PASSWORD} 
     ports:
       - "8080:80"
     depends_on:
-      # KOREKSI 3: Sesuaikan nama service
       - product-db
-    # KOREKSI 4: Hapus section networks agar gabung ke default network
     restart: always
+
+  # ================= USER SERVICE (POSTGRES) =================
+
+  user-service:
+    build: ./user-service
+    container_name: user-service
+    ports:
+      - "4000:4000"
+    env_file:
+      - .env
+    environment:
+      DB_HOST: user-db
+      DB_PORT: 5432
+      DB_NAME: ${USER_DB_NAME}
+      DB_USER: ${USER_DB_USER}
+      DB_PASSWORD: ${USER_DB_PASSWORD}
+    depends_on:
+      - user-db
+    restart: always
+
+  user-db:
+    image: postgres:15
+    container_name: user-db
+    environment:
+      POSTGRES_DB: ${USER_DB_NAME}
+      POSTGRES_USER: ${USER_DB_USER}
+      POSTGRES_PASSWORD: ${USER_DB_PASSWORD}
+    volumes:
+      - user-db-data:/var/lib/postgresql/data
+    restart: always
+
+  # ================= REVIEW SERVICE (MONGO) =================
 
   review-service:
     build: ./review-service
@@ -55,7 +84,7 @@ services:
     depends_on:
       - mongo-db
     environment:
-      MONGO_URI: mongodb://admin:admin123@mongo-db:27017/reviewdb?authSource=admin
+      MONGO_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo-db:27017/${MONGO_DB_NAME}?authSource=admin
 
   mongo-db:
     image: mongo:latest
@@ -87,7 +116,10 @@ services:
     restart: always
     depends_on:
       - mongo-db
-  
+
+# ================= VOLUMES =================
+
 volumes:
-    product-db-data:
-    mongo-db-data:
+  product-db-data:
+  mongo-db-data:
+  user-db-data:
