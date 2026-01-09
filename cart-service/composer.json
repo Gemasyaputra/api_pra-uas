@@ -1,0 +1,12 @@
+{
+    "name": "ecommerce/cart-service",
+    "description": "Cart services Laravel lumen for ecommerce",
+    "type": "project",
+    "license": "MIT",
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "CartService\\": "src/"
+        }
+    }
+}
