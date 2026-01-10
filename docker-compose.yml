@@ -22,8 +22,8 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${PRODUCT_DB_PASSWORD}
       MYSQL_DATABASE: ${PRODUCT_DB_NAME}
-      MYSQL_USER: ${PRODUCT_DB_USER}
-      MYSQL_PASSWORD: ${PRODUCT_DB_PASSWORD}
+      # MYSQL_USER: ${PRODUCT_DB_USER}
+      # MYSQL_PASSWORD: ${PRODUCT_DB_PASSWORD}
     volumes:
       - product-db-data:/var/lib/mysql
     restart: always
@@ -85,6 +85,10 @@ services:
       - mongo-db
     environment:
       MONGO_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo-db:27017/${MONGO_DB_NAME}?authSource=admin
+
+    volumes:
+      - ./review-service:/app  # Menghubungkan folder codingan kamu ke dalam container
+    command: uvicorn main:app --host 0.0.0.0 --port 5002 --reload # Menjalankan aplikasi FastAPI di dalam container
 
   mongo-db:
     image: mongo:latest
